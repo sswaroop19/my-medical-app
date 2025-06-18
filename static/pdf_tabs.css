@@ -1,0 +1,191 @@
+/* PDF Tabs Styling */
+
+/* Tabs container */
+.pdf-tabs-container {
+    margin-top: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    display: none; /* Hidden by default, shown when tabs are created */
+    width: 100%;
+}
+
+/* Tab header */
+.pdf-tabs-header {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #e0e0e0;
+    width: 100%;
+    justify-content: flex-start;
+}
+
+/* Tab buttons */
+.pdf-tab-button {
+    padding: 10px 15px;
+    background-color: #f5f5f5;
+    border: none;
+    border-right: 1px solid #e0e0e0;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    min-width: 120px;
+    flex: 0 0 auto;
+}
+
+.pdf-tab-button.active {
+    background-color: #fff;
+    border-bottom: 2px solid #007bff;
+}
+
+.pdf-tab-button:hover {
+    background-color: #e9e9e9;
+}
+
+/* Close button */
+.pdf-tab-close {
+    margin-left: 8px;
+    font-size: 16px;
+    line-height: 1;
+    color: #999;
+}
+
+.pdf-tab-close:hover {
+    color: #ff0000;
+}
+
+/* Tab content */
+.pdf-tabs-content {
+    position: relative;
+    min-height: 300px;
+    width: 100%;
+}
+
+/* Tab panes */
+.pdf-tab-pane {
+    display: none;
+    padding: 15px;
+    width: 100%;
+}
+
+.pdf-tab-pane.active {
+    display: block;
+}
+
+/* PDF header */
+.pdf-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+    width: 100%;
+}
+
+.pdf-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.pdf-pages {
+    color: #666;
+    font-size: 14px;
+}
+
+/* PDF chat container */
+.pdf-chat-container {
+    height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 15px;
+    background-color: #f9f9f9;
+    width: 100%;
+}
+
+/* Messages */
+.message {
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    max-width: 80%;
+    clear: both;
+}
+
+.user-message {
+    background-color: #e3f2fd;
+    float: right;
+}
+
+.assistant-message {
+    background-color: #f1f1f1;
+    float: left;
+}
+
+.message-content {
+    word-wrap: break-word;
+}
+
+/* Loading indicator */
+.message-loading {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    clear: both;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+}
+
+.loading-text {
+    color: #666;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Input container */
+.pdf-input-container {
+    margin-top: 15px;
+    width: 100%;
+}
+
+.input-wrapper {
+    display: flex;
+    width: 100%;
+}
+
+.pdf-question-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px 0 0 4px;
+    font-size: 14px;
+}
+
+.pdf-submit-btn {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+}
+
+.pdf-submit-btn:hover {
+    background-color: #0069d9;
+}

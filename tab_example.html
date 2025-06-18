@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Tabs Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Tabs container */
+        .pdf-tabs-container {
+            margin-top: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            width: 100%;
+        }
+        
+        /* Tab header */
+        .pdf-tabs-header {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+            width: 100%;
+            justify-content: flex-start;
+        }
+        
+        /* Tab buttons */
+        .pdf-tab-button {
+            padding: 10px 15px;
+            background-color: #f5f5f5;
+            border: none;
+            border-right: 1px solid #e0e0e0;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            min-width: 120px;
+            flex: 0 0 auto;
+        }
+        
+        .pdf-tab-button.active {
+            background-color: #fff;
+            border-bottom: 2px solid #007bff;
+        }
+        
+        /* Close button */
+        .pdf-tab-close {
+            margin-left: 8px;
+            font-size: 16px;
+            line-height: 1;
+            color: #999;
+        }
+        
+        /* Tab content */
+        .pdf-tabs-content {
+            position: relative;
+            min-height: 300px;
+            width: 100%;
+        }
+        
+        /* Tab panes */
+        .pdf-tab-pane {
+            display: none;
+            padding: 15px;
+            width: 100%;
+        }
+        
+        .pdf-tab-pane.active {
+            display: block;
+        }
+        
+        /* PDF header */
+        .pdf-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .pdf-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+        
+        .pdf-pages {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        /* PDF chat container */
+        .pdf-chat-container {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+        }
+        
+        /* Input container */
+        .pdf-input-container {
+            margin-top: 15px;
+        }
+        
+        .input-wrapper {
+            display: flex;
+        }
+        
+        .pdf-question-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px 0 0 4px;
+            font-size: 14px;
+        }
+        
+        .pdf-submit-btn {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PDF Tabs Example</h1>
+        
+        <div class="pdf-tabs-container">
+            <div class="pdf-tabs-header">
+                <button class="pdf-tab-button active">Document 1 <span class="pdf-tab-close">&times;</span></button>
+                <button class="pdf-tab-button">Document 2 <span class="pdf-tab-close">&times;</span></button>
+                <button class="pdf-tab-button">Document 3 <span class="pdf-tab-close">&times;</span></button>
+                <button class="pdf-tab-button">Document 4 <span class="pdf-tab-close">&times;</span></button>
+                <button class="pdf-tab-button">Document 5 <span class="pdf-tab-close">&times;</span></button>
+            </div>
+            
+            <div class="pdf-tabs-content">
+                <div class="pdf-tab-pane active">
+                    <div class="pdf-header">
+                        <h3>Document 1</h3>
+                        <span class="pdf-pages">10 pages</span>
+                    </div>
+                    
+                    <div class="pdf-chat-container">
+                        <!-- Chat messages would go here -->
+                        <p>This is the content for Document 1</p>
+                    </div>
+                    
+                    <div class="pdf-input-container">
+                        <div class="input-wrapper">
+                            <input type="text" class="pdf-question-input" placeholder="Ask a question about this PDF...">
+                            <button class="pdf-submit-btn">Ask</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Simple tab switching functionality
+        document.querySelectorAll('.pdf-tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons
+                document.querySelectorAll('.pdf-tab-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Add active class to clicked button
+                button.classList.add('active');
+                
+                // Show corresponding tab content (in a real app, you'd have multiple tab panes)
+                console.log('Switched to tab:', button.textContent.trim());
+            });
+            
+            // Close button functionality
+            button.querySelector('.pdf-tab-close').addEventListener('click', (e) => {
+                e.stopPropagation();
+                console.log('Closed tab:', button.textContent.trim());
+                button.remove();
+            });
+        });
+    </script>
+</body>
+</html>

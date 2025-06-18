@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Gynecology Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='deepseek_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='fonts.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='additional_styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='pdf_tabs.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* Inline styles to fix tab display */
+        .pdf-tabs-header {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            width: 100% !important;
+            justify-content: flex-start !important;
+        }
+        
+        .pdf-tab-button {
+            flex: 0 0 auto !important;
+            min-width: 120px !important;
+        }
+        
+        .pdf-tabs-container {
+            width: 100% !important;
+            margin-top: 20px !important;
+        }
+        
+        .pdf-tab-pane.active {
+            display: block !important;
+            width: 100% !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>Medical Gynecology Assistant</h1>
+            </div>
+            
+            <div class="sidebar-content">
+                <div class="sidebar-section">
+                    <h2>Upload PDF</h2>
+                    <form id="pdf-upload-form" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="pdf-file">Select a PDF file:</label>
+                            <input type="file" id="pdf-file" name="file" accept=".pdf">
+                        </div>
+                        <button type="submit" id="pdf-upload-button" class="btn btn-primary">Upload</button>
+                    </form>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h2>Your PDFs</h2>
+                    <div id="pdf-list" class="pdf-list">
+                        <!-- PDF list will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h2>Settings</h2>
+                    <div class="setting-item">
+                        <label for="web-search-toggle">Web Search</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="web-search-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h2>About</h2>
+                    <p>This application uses RAG (Retrieval Augmented Generation) to answer questions about gynecology based on medical textbooks.</p>
+                    <p>Ask questions related to gynecology, and the system will retrieve relevant information from the loaded medical books.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="chat-container" id="chat-container">
+                <!-- Chat messages will be displayed here -->
+            </div>
+            
+            <div class="input-container">
+                <div class="url-input-container" id="url-input-container" style="display: none;">
+                    <input type="text" id="url-input" placeholder="Enter a URL to analyze...">
+                    <button id="url-submit-btn">Analyze</button>
+                    <button id="url-cancel-btn">Cancel</button>
+                </div>
+                
+                <div class="main-input-wrapper">
+                    <input type="text" id="question-input" placeholder="Ask a question about gynecology...">
+                    <button id="submit-btn">Ask</button>
+                    <button id="url-btn" title="Ask about a specific URL">URL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize marked for Markdown rendering
+        marked.setOptions({
+            breaks: true,
+            gfm: true
+        });
+        
+        // Store chat history
+        let chatHistory = [];
+        
+        // Store PDF information
+        let userPdfs = {};
+        
+        // DOM elements
+        const chatContainer = document.getElementById('chat-container');
+        const questionInput = document.getElementById('question-input');
+        const submitBtn = document.getElementById('submit-btn');
+        const urlBtn = document.getElementById('url-btn');
+        const urlInputContainer = document.getElementById('url-input-container');
+        const urlInput = document.getElementById('url-input');
+        const urlSubmitBtn = document.getElementById('url-submit-btn');
+        const urlCancelBtn = document.getElementById('url-cancel-btn');
+        const webSearchToggle = document.getElementById('web-search-toggle');
+        const pdfList = document.getElementById('pdf-list');
+        
+        // Load chat history from localStorage
+        function loadChatHistory() {
+            const savedHistory = localStorage.getItem('chatHistory');
+            if (savedHistory) {
+                chatHistory = JSON.parse(savedHistory);
+                
+                // Display saved messages
+                chatHistory.forEach(message => {
+                    addMessageToChat(message.role, message.content);
+                });
+            }
+        }
+        
+        // Save chat history to localStorage
+        function saveChatHistory() {
+            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+        }
+        
+        // Add message to chat
+        function addMessageToChat(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}-message`;
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            
+            // Parse markdown for assistant messages
+            if (role === 'assistant') {
+                messageContent.innerHTML = marked.parse(content);
+                
+                // Process citations and add images for web results
+                messageContent.innerHTML = messageContent.innerHTML.replace(/\[(\d+)\] Web Search Result #\d+: (.*?) \((https?:\/\/[^\s\)]+)\) \[img:(https?:\/\/[^\s\]]+)\]/g, 
+                    function(match, num, title, url, img) {
+                        return `<div class="web-result">
+                            <div class="web-result-image">
+                                <img src="${img}" alt="${title}" onerror="this.style.display='none'">
+                            </div>
+                            <div class="web-result-content">
+                                <a href="${url}" target="_blank" class="web-result-title">${title}</a>
+                                <div class="web-result-citation">[${num}] ${url}</div>
+                            </div>
+                        </div>`;
+                    }
+                );
+                
+                // Process citations for provided URLs
+                messageContent.innerHTML = messageContent.innerHTML.replace(/\[(\d+)\] Provided URL: (.*?) \((https?:\/\/[^\s\)]+)\) \[img:(https?:\/\/[^\s\]]+)\]/g, 
+                    function(match, num, title, url, img) {
+                        return `<div class="web-result">
+                            <div class="web-result-image">
+                                <img src="${img}" alt="${title}" onerror="this.style.display='none'">
+                            </div>
+                            <div class="web-result-content">
+                                <a href="${url}" target="_blank" class="web-result-title">${title}</a>
+                                <div class="web-result-citation">[${num}] ${url}</div>
+                            </div>
+                        </div>`;
+                    }
+                );
+                
+                // Process regular citations
+                messageContent.innerHTML = messageContent.innerHTML.replace(/\[(\d+)\] ([^,]+), page (\d+)/g, 
+                    '<div class="citation">[<span class="citation-number">$1</span>] <span class="citation-source">$2</span>, page <span class="citation-page">$3</span></div>'
+                );
+            } else {
+                messageContent.textContent = content;
+            }
+            
+            messageDiv.appendChild(messageContent);
+            chatContainer.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Send question to server
+        function askQuestion(question, isUrl = false) {
+            // Add user message to chat
+            addMessageToChat('user', question);
+            
+            // Add to chat history
+            chatHistory.push({
+                role: 'user',
+                content: question
+            });
+            
+            // Save chat history
+            saveChatHistory();
+            
+            // Show loading indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message-loading';
+            loadingDiv.innerHTML = '<div class="loading-spinner"></div><div class="loading-text">Thinking...</div>';
+            chatContainer.appendChild(loadingDiv);
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Get web search setting
+            const webSearchEnabled = webSearchToggle.checked;
+            
+            // Send question to server
+            fetch('/api/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    question: question,
+                    web_search_enabled: webSearchEnabled
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove loading indicator
+                chatContainer.removeChild(loadingDiv);
+                
+                if (data.error) {
+                    // Show error message
+                    const errorMessage = `Error: ${data.error}`;
+                    addMessageToChat('assistant', errorMessage);
+                    
+                    // Add to chat history
+                    chatHistory.push({
+                        role: 'assistant',
+                        content: errorMessage
+                    });
+                } else {
+                    // Show answer
+                    addMessageToChat('assistant', data.answer);
+                    
+                    // Add to chat history
+                    chatHistory.push({
+                        role: 'assistant',
+                        content: data.answer
+                    });
+                }
+                
+                // Save chat history
+                saveChatHistory();
+            })
+            .catch(error => {
+                // Remove loading indicator
+                chatContainer.removeChild(loadingDiv);
+                
+                // Show error message
+                const errorMessage = `Error: ${error.message}`;
+                addMessageToChat('assistant', errorMessage);
+                
+                // Add to chat history
+                chatHistory.push({
+                    role: 'assistant',
+                    content: errorMessage
+                });
+                
+                // Save chat history
+                saveChatHistory();
+            });
+        }
+        
+        // Event listeners
+        submitBtn.addEventListener('click', function() {
+            const question = questionInput.value.trim();
+            if (question) {
+                askQuestion(question);
+                questionInput.value = '';
+            }
+        });
+        
+        questionInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const question = questionInput.value.trim();
+                if (question) {
+                    askQuestion(question);
+                    questionInput.value = '';
+                }
+            }
+        });
+        
+        urlBtn.addEventListener('click', function() {
+            urlInputContainer.style.display = 'flex';
+            questionInput.disabled = true;
+            submitBtn.disabled = true;
+            urlBtn.disabled = true;
+            urlInput.focus();
+        });
+        
+        urlSubmitBtn.addEventListener('click', function() {
+            const url = urlInput.value.trim();
+            if (url) {
+                // Hide URL input
+                urlInputContainer.style.display = 'none';
+                questionInput.disabled = false;
+                submitBtn.disabled = false;
+                urlBtn.disabled = false;
+                
+                // Ask question with URL
+                askQuestion(`Analyze this URL: ${url}`, true);
+                urlInput.value = '';
+            }
+        });
+        
+        urlCancelBtn.addEventListener('click', function() {
+            urlInputContainer.style.display = 'none';
+            questionInput.disabled = false;
+            submitBtn.disabled = false;
+            urlBtn.disabled = false;
+            urlInput.value = '';
+        });
+        
+        // PDF functions
+        function savePdfToLocalStorage(pdfId, filename, pageCount) {
+            userPdfs[pdfId] = {
+                id: pdfId,
+                filename: filename,
+                page_count: pageCount
+            };
+            localStorage.setItem('userPdfs', JSON.stringify(userPdfs));
+        }
+        
+        function loadPdfsFromLocalStorage() {
+            const savedPdfs = localStorage.getItem('userPdfs');
+            if (savedPdfs) {
+                userPdfs = JSON.parse(savedPdfs);
+                
+                // Add PDFs to sidebar
+                Object.values(userPdfs).forEach(pdf => {
+                    addPdfToSidebar(pdf.id, pdf.filename);
+                });
+            }
+        }
+        
+        function addPdfToSidebar(pdfId, filename) {
+            // Check if PDF is already in sidebar
+            if (document.querySelector(`.pdf-item[data-pdf-id="${pdfId}"]`)) {
+                return;
+            }
+            
+            const pdfItem = document.createElement('div');
+            pdfItem.className = 'pdf-item';
+            pdfItem.setAttribute('data-pdf-id', pdfId);
+            
+            const pdfName = document.createElement('div');
+            pdfName.className = 'pdf-name';
+            pdfName.textContent = filename;
+            pdfItem.appendChild(pdfName);
+            
+            const pdfActions = document.createElement('div');
+            pdfActions.className = 'pdf-actions';
+            
+            const openBtn = document.createElement('button');
+            openBtn.className = 'pdf-open-btn';
+            openBtn.textContent = 'Open';
+            openBtn.onclick = function() {
+                // Create or activate PDF tab
+                createPdfTab(pdfId, filename, userPdfs[pdfId].page_count || 0);
+            };
+            pdfActions.appendChild(openBtn);
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'pdf-delete-btn';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = function() {
+                if (confirm(`Are you sure you want to delete ${filename}?`)) {
+                    deletePdf(pdfId);
+                }
+            };
+            pdfActions.appendChild(deleteBtn);
+            
+            pdfItem.appendChild(pdfActions);
+            pdfList.appendChild(pdfItem);
+        }
+        
+        function deletePdf(pdfId) {
+            fetch(`/api/delete-pdf/${pdfId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove from sidebar
+                    const pdfItem = document.querySelector(`.pdf-item[data-pdf-id="${pdfId}"]`);
+                    if (pdfItem) {
+                        pdfItem.parentNode.removeChild(pdfItem);
+                    }
+                    
+                    // Remove from localStorage
+                    delete userPdfs[pdfId];
+                    localStorage.setItem('userPdfs', JSON.stringify(userPdfs));
+                    
+                    // Close tab if open
+                    closePdfTab(pdfId);
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                alert(`Error: ${error.message}`);
+            });
+        }
+        
+        // Load chat history and PDFs on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadChatHistory();
+            
+            // Load PDFs from server
+            fetch('/api/pdfs')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.pdfs && data.pdfs.length > 0) {
+                        data.pdfs.forEach(pdf => {
+                            // Save to localStorage
+                            savePdfToLocalStorage(pdf.id, pdf.filename, pdf.page_count);
+                            
+                            // Add to sidebar
+                            addPdfToSidebar(pdf.id, pdf.filename);
+                        });
+                    } else {
+                        // Load saved PDFs from localStorage
+                        loadPdfsFromLocalStorage();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading PDFs:', error);
+                    // Still try to load from localStorage
+                    loadPdfsFromLocalStorage();
+                });
+        });
+    </script>
+    
+    <!-- PDF Tabs Script -->
+    <script src="{{ url_for('static', filename='pdf_tabs.js') }}"></script>
+    <!-- PDF Tabs Fix Script -->
+    <script src="{{ url_for('static', filename='pdf_tabs_fix.js') }}"></script>
+</body>
+</html>

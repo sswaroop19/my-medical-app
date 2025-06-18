@@ -1,0 +1,3 @@
+@echo off
+echo Starting Medical PDF Assistant with Tabs...
+streamlit run app_pdf_tabs.py

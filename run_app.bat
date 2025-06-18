@@ -1,0 +1,3 @@
+@echo off
+echo Starting Medical PDF Assistant...
+python app_flask.py

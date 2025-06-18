@@ -1,0 +1,3 @@
+@echo off
+echo Starting Simple Medical Assistant...
+python app_simple.py

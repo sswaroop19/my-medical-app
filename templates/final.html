@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Medical Assistant Pro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='enhanced_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='final_style.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <button id="new-chat-btn" class="new-chat-btn">
+                    <span>New chat</span>
+                    <span>+</span>
+                </button>
+            </div>
+            
+            <div id="chat-history" class="chat-history">
+                <!-- Chat history items will be added here -->
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-item" id="clear-chats-btn">
+                    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    <span>Clear conversations</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Web Search Toggle removed -->
+            
+            <div id="chat-container" class="chat-container">
+                <!-- Welcome screen shown when no chat is active -->
+                <div id="welcome-screen" class="welcome-screen">
+                    <h1 class="welcome-title">Medical Assistant Pro</h1>
+                    <p class="welcome-subtitle">Your AI-powered medical knowledge assistant</p>
+                    
+                    <div class="suggestions-container">
+                        <div class="suggestions-row">
+                            <div class="suggestion-card">
+                                <div class="suggestion-title">PCOS Symptoms</div>
+                                <div class="suggestion-text">What are the common symptoms of Polycystic Ovary Syndrome?</div>
+                            </div>
+                            <div class="suggestion-card">
+                                <div class="suggestion-title">Pregnancy Nutrition</div>
+                                <div class="suggestion-text">What foods should I eat during pregnancy?</div>
+                            </div>
+                        </div>
+                        <div class="suggestions-row">
+                            <div class="suggestion-card">
+                                <div class="suggestion-title">Endometriosis Treatment</div>
+                                <div class="suggestion-text">What are the current treatments for endometriosis?</div>
+                            </div>
+                            <div class="suggestion-card">
+                                <div class="suggestion-title">Menopause Management</div>
+                                <div class="suggestion-text">How can I manage hot flashes during menopause?</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chat messages will be displayed here -->
+            </div>
+            
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea id="question-input" placeholder="Message Medical Assistant..." rows="1"></textarea>
+                    <button id="submit-btn" class="submit-btn">
+                        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                    <div id="autocomplete-container" class="autocomplete-container"></div>
+                </div>
+                <div class="input-info">
+                    Medical Assistant can make mistakes. Consider checking important information.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Modal removed -->
+    
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+    
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='simplified_script.js') }}"></script>
+</body>
+</html>

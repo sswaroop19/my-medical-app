@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Gynecology Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='fonts.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='deepseek_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='additional_styles.css') }}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <button class="new-chat-btn" id="new-chat-btn">
+                <span>+</span> New Chat
+            </button>
+        </div>
+        <div class="chat-history" id="chat-history">
+            <!-- Chat history items will be added here -->
+        </div>
+        <div class="sidebar-footer">
+            Medical Gynecology Assistant v1.0
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-container">
+        <header>
+            <div class="header-content">
+                <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
+                <div class="logo">
+                    <div class="logo-icon">M</div>
+                    <div class="logo-text">Medical Gynecology Assistant</div>
+                </div>
+                <div class="header-controls">
+                    <div class="toggle-container">
+                        <span>Web Search</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="web-search-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <main>
+            <div id="chat-container" class="chat-container">
+                <div class="welcome-container">
+                    <h1 class="welcome-title">Medical Gynecology Assistant</h1>
+                    <p class="welcome-subtitle">Ask questions about gynecology and get evidence-based answers from medical literature.</p>
+                    
+                    <div class="example-questions">
+                        <div class="example-question" onclick="setQuestion('What are the common causes of PCOS?')">
+                            What are the common causes of PCOS?
+                        </div>
+                        <div class="example-question" onclick="setQuestion('What are the treatment options for endometriosis?')">
+                            What are the treatment options for endometriosis?
+                        </div>
+                        <div class="example-question" onclick="setQuestion('What are the risk factors for preeclampsia?')">
+                            What are the risk factors for preeclampsia?
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <input type="text" id="question-input" placeholder="Ask a question about gynecology...">
+                    <button id="submit-btn">Ask</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Function to copy text to clipboard
+        function copyToClipboard(button) {
+            const messageDiv = button.closest('.message');
+            const textToCopy = messageDiv.querySelector('.message-text').innerText;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                // Change button text temporarily
+                const originalText = button.innerHTML;
+                button.innerHTML = `
+                    <svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Copied!
+                `;
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+        
+        // Function to toggle options menu
+        function toggleOptionsMenu(button) {
+            const menu = button.nextElementSibling;
+            menu.classList.toggle('active');
+            
+            // Close when clicking outside
+            document.addEventListener('click', function closeMenu(e) {
+                if (!menu.contains(e.target) && e.target !== button) {
+                    menu.classList.remove('active');
+                    document.removeEventListener('click', closeMenu);
+                }
+            });
+        }
+        
+        // Make functions available globally
+        window.copyToClipboard = copyToClipboard;
+        window.toggleOptionsMenu = toggleOptionsMenu;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatContainer = document.getElementById('chat-container');
+            const questionInput = document.getElementById('question-input');
+            const submitBtn = document.getElementById('submit-btn');
+            const sidebar = document.getElementById('sidebar');
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const newChatBtn = document.getElementById('new-chat-btn');
+            const chatHistory = document.getElementById('chat-history');
+            const webSearchToggle = document.getElementById('web-search-toggle');
+            
+            let isFirstQuestion = true;
+            let currentChatId = null;
+            
+            // Load chat history from localStorage
+            loadChatHistory();
+            
+            // Toggle sidebar on mobile
+            mobileMenuBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('active');
+            });
+            
+            // Function to set question from example
+            window.setQuestion = function(question) {
+                questionInput.value = question;
+                questionInput.focus();
+            };
+            
+            // Function to generate a unique ID for each chat
+            function generateChatId() {
+                return Date.now().toString();
+            }
+            
+            // Function to start a new chat
+            function startNewChat() {
+                // Save current chat if exists
+                if (currentChatId && !isFirstQuestion) {
+                    saveChatToLocalStorage();
+                }
+                
+                // Clear chat container
+                chatContainer.innerHTML = `
+                    <div class="welcome-container">
+                        <h1 class="welcome-title">Medical Gynecology Assistant</h1>
+                        <p class="welcome-subtitle">Ask questions about gynecology and get evidence-based answers from medical literature.</p>
+                        
+                        <div class="example-questions">
+                            <div class="example-question" onclick="setQuestion('What are the common causes of PCOS?')">
+                                What are the common causes of PCOS?
+                            </div>
+                            <div class="example-question" onclick="setQuestion('What are the treatment options for endometriosis?')">
+                                What are the treatment options for endometriosis?
+                            </div>
+                            <div class="example-question" onclick="setQuestion('What are the risk factors for preeclampsia?')">
+                                What are the risk factors for preeclampsia?
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Reset state
+                isFirstQuestion = true;
+                currentChatId = generateChatId();
+                
+                // Update active chat in history
+                updateActiveChatInHistory();
+            }
+            
+            // Function to load chat history from localStorage
+            function loadChatHistory() {
+                const history = JSON.parse(localStorage.getItem('chatHistory')) || [];
+                
+                // Clear history container
+                chatHistory.innerHTML = '';
+                
+                // Add history items
+                history.forEach(chat => {
+                    addChatToHistory(chat.id, chat.title);
+                });
+                
+                // If no current chat, start a new one
+                if (!currentChatId) {
+                    currentChatId = generateChatId();
+                }
+            }
+            
+            // Function to add a chat to the history sidebar
+            function addChatToHistory(chatId, title) {
+                const historyItem = document.createElement('div');
+                historyItem.className = `history-item ${chatId === currentChatId ? 'active' : ''}`;
+                historyItem.dataset.chatId = chatId;
+                historyItem.innerHTML = `
+                    <span class="history-icon">💬</span>
+                    <span class="history-title">${title}</span>
+                `;
+                
+                historyItem.addEventListener('click', function() {
+                    loadChat(chatId);
+                });
+                
+                chatHistory.prepend(historyItem);
+            }
+            
+            // Function to update active chat in history
+            function updateActiveChatInHistory() {
+                // Remove active class from all items
+                document.querySelectorAll('.history-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // Add active class to current chat
+                const currentItem = document.querySelector(`.history-item[data-chat-id="${currentChatId}"]`);
+                if (currentItem) {
+                    currentItem.classList.add('active');
+                }
+            }
+            
+            // Function to save current chat to localStorage
+            function saveChatToLocalStorage() {
+                // Get existing history
+                const history = JSON.parse(localStorage.getItem('chatHistory')) || [];
+                
+                // Get chat content
+                const messages = [];
+                document.querySelectorAll('.message').forEach(msg => {
+                    const isUser = msg.classList.contains('user-message');
+                    const content = isUser 
+                        ? msg.querySelector('.message-text').textContent
+                        : {
+                            answer: msg.querySelector('.message-text').innerHTML,
+                            sources: Array.from(msg.querySelectorAll('.sources li')).map(li => li.textContent)
+                        };
+                    
+                    messages.push({
+                        isUser,
+                        content
+                    });
+                });
+                
+                // Get title from first user message
+                const firstUserMessage = messages.find(msg => msg.isUser);
+                const title = firstUserMessage 
+                    ? (firstUserMessage.content.length > 30 
+                        ? firstUserMessage.content.substring(0, 30) + '...' 
+                        : firstUserMessage.content)
+                    : 'New Chat';
+                
+                // Find existing chat or create new entry
+                const existingChatIndex = history.findIndex(chat => chat.id === currentChatId);
+                const chatData = {
+                    id: currentChatId,
+                    title,
+                    messages,
+                    timestamp: Date.now()
+                };
+                
+                if (existingChatIndex !== -1) {
+                    history[existingChatIndex] = chatData;
+                } else {
+                    history.push(chatData);
+                    // Add to sidebar
+                    addChatToHistory(currentChatId, title);
+                }
+                
+                // Sort by timestamp (newest first)
+                history.sort((a, b) => b.timestamp - a.timestamp);
+                
+                // Save to localStorage
+                localStorage.setItem('chatHistory', JSON.stringify(history));
+            }
+            
+            // Function to load a chat from history
+            function loadChat(chatId) {
+                // Save current chat if exists
+                if (currentChatId && !isFirstQuestion) {
+                    saveChatToLocalStorage();
+                }
+                
+                // Get chat data
+                const history = JSON.parse(localStorage.getItem('chatHistory')) || [];
+                const chat = history.find(c => c.id === chatId);
+                
+                if (!chat) return;
+                
+                // Set current chat ID
+                currentChatId = chatId;
+                
+                // Clear chat container
+                chatContainer.innerHTML = '';
+                
+                // Add messages
+                chat.messages.forEach(msg => {
+                    if (msg.isUser) {
+                        addMessage(msg.content, true);
+                    } else {
+                        addMessage(msg.content);
+                    }
+                });
+                
+                // Update active chat in history
+                updateActiveChatInHistory();
+                
+                // Set isFirstQuestion to false since we're loading an existing chat
+                isFirstQuestion = false;
+                
+                // Close sidebar on mobile
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('active');
+                }
+            }
+            
+            // Function to add a message to the chat
+            function addMessage(content, isUser = false) {
+                // Clear welcome message on first interaction
+                if (isFirstQuestion) {
+                    chatContainer.innerHTML = '';
+                    isFirstQuestion = false;
+                }
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isUser ? 'user-message' : 'assistant-message'}`;
+                
+                const messageInnerDiv = document.createElement('div');
+                messageInnerDiv.className = 'message-inner';
+                
+                const avatarDiv = document.createElement('div');
+                avatarDiv.className = `avatar ${isUser ? 'user-avatar' : 'assistant-avatar'}`;
+                avatarDiv.textContent = isUser ? 'U' : 'A';
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                
+                if (isUser) {
+                    contentDiv.innerHTML = `<div class="message-text">${content}</div>`;
+                } else {
+                    // Convert markdown-style citations [1] to superscript
+                    let formattedContent = content.answer.replace(/\[(\d+)\]/g, '<sup>[$1]</sup>');
+                    
+                    // Format the answer with paragraphs
+                    let paragraphs = formattedContent.split('\n\n').map(p => `<p>${p}</p>`).join('');
+                    
+                    // Separate web sources, document sources, and URL sources
+                    let docSources = [];
+                    let webSources = [];
+                    let urlSources = [];
+                    
+                    content.sources.forEach(source => {
+                        if (source.includes('Web Search Result')) {
+                            webSources.push(source);
+                        } else if (source.includes('Provided URL')) {
+                            urlSources.push(source);
+                        } else {
+                            docSources.push(source);
+                        }
+                    });
+                    
+                    // Create sources HTML
+                    let sourcesHtml = '<div class="sources">';
+                    
+                    // Add URL sources if available (prioritize these)
+                    if (urlSources.length > 0) {
+                        sourcesHtml += '<div class="url-sources-section"><strong>From Your Provided URL:</strong><ul>';
+                        urlSources.forEach(source => {
+                            // Extract URL from the source text
+                            const urlMatch = source.match(/\((https?:\/\/[^\s)]+)\)/);
+                            const url = urlMatch ? urlMatch[1] : '#';
+                            
+                            // Extract title from the source text
+                            const titleMatch = source.match(/: ([^(]+) \(/);
+                            const title = titleMatch ? titleMatch[1] : source;
+                            
+                            // Extract image URL if available
+                            const imageMatch = source.match(/\[img:(https?:\/\/[^\s\]]+)\]/);
+                            const imageUrl = imageMatch ? imageMatch[1] : '';
+                            
+                            // Create source item with image if available
+                            if (imageUrl) {
+                                sourcesHtml += `
+                                <li class="url-source url-source-with-image">
+                                    <div class="url-source-content">
+                                        <div>${source.split(':')[0]}: <a href="${url}" target="_blank" rel="noopener noreferrer">${title}</a></div>
+                                        <div class="url-source-image">
+                                            <a href="${url}" target="_blank" rel="noopener noreferrer">
+                                                <img src="${imageUrl}" alt="${title}" onerror="this.style.display='none'">
+                                            </a>
+                                        </div>
+                                    </div>
+                                </li>`;
+                            } else {
+                                sourcesHtml += `<li class="url-source">${source.split(':')[0]}: <a href="${url}" target="_blank" rel="noopener noreferrer">${title}</a></li>`;
+                            }
+                        });
+                        sourcesHtml += '</ul></div>';
+                    }
+                    
+                    // Add document sources if available
+                    if (docSources.length > 0) {
+                        sourcesHtml += '<div class="doc-sources-section"><strong>Document Sources:</strong><ul>';
+                        docSources.forEach(source => {
+                            sourcesHtml += `<li class="doc-source">${source}</li>`;
+                        });
+                        sourcesHtml += '</ul></div>';
+                    }
+                    
+                    // Add web sources if available (only if web search is enabled)
+                    const webSearchEnabled = document.getElementById('web-search-toggle').checked;
+                    if (webSources.length > 0 && webSearchEnabled) {
+                        sourcesHtml += '<div class="web-sources-section"><strong>Web Sources:</strong><ul>';
+                        webSources.forEach(source => {
+                            // Extract URL from the source text
+                            const urlMatch = source.match(/\((https?:\/\/[^\s)]+)\)/);
+                            const url = urlMatch ? urlMatch[1] : '#';
+                            
+                            // Extract title from the source text
+                            const titleMatch = source.match(/: ([^(]+) \(/);
+                            const title = titleMatch ? titleMatch[1] : source;
+                            
+                            // Extract image URL if available
+                            const imageMatch = source.match(/\[img:(https?:\/\/[^\s\]]+)\]/);
+                            const imageUrl = imageMatch ? imageMatch[1] : '';
+                            
+                            // Create source item with image if available
+                            if (imageUrl) {
+                                sourcesHtml += `
+                                <li class="web-source web-source-with-image">
+                                    <div class="web-source-content">
+                                        <div>${source.split(':')[0]}: <a href="${url}" target="_blank" rel="noopener noreferrer">${title}</a></div>
+                                        <div class="web-source-image">
+                                            <a href="${url}" target="_blank" rel="noopener noreferrer">
+                                                <img src="${imageUrl}" alt="${title}" onerror="this.style.display='none'">
+                                            </a>
+                                        </div>
+                                    </div>
+                                </li>`;
+                            } else {
+                                sourcesHtml += `<li class="web-source">${source.split(':')[0]}: <a href="${url}" target="_blank" rel="noopener noreferrer">${title}</a></li>`;
+                            }
+                        });
+                        sourcesHtml += '</ul></div>';
+                    }
+                    
+                    sourcesHtml += '</div>';
+                    
+                    // Add copy button and options menu
+                    const messageActionsHtml = `
+                    <div class="message-actions">
+                        <button class="copy-btn" onclick="copyToClipboard(this)">
+                            <svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+                            </svg>
+                            Copy
+                        </button>
+                    </div>
+                    <div class="response-options">
+                        <button class="options-btn" onclick="toggleOptionsMenu(this)">⋮</button>
+                        <div class="options-menu">
+                            <div class="option-item" onclick="copyToClipboard(this.closest('.message').querySelector('.copy-btn'))">
+                                <svg class="option-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+                                </svg>
+                                Copy response
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                    
+                    contentDiv.innerHTML = `<div class="message-text">${paragraphs}</div>${sourcesHtml}${messageActionsHtml}`;
+                }
+                
+                messageDiv.appendChild(avatarDiv);
+                messageDiv.appendChild(contentDiv);
+                
+                chatContainer.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                window.scrollTo({
+                    top: document.body.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }
+            
+            // Function to show loading indicator
+            function showLoading() {
+                // Clear welcome message on first interaction
+                if (isFirstQuestion) {
+                    chatContainer.innerHTML = '';
+                    isFirstQuestion = false;
+                }
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message assistant-message';
+                messageDiv.id = 'loading-indicator';
+                
+                const avatarDiv = document.createElement('div');
+                avatarDiv.className = 'avatar assistant-avatar';
+                avatarDiv.textContent = 'A';
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content loading';
+                contentDiv.innerHTML = `
+                    Generating response
+                    <div class="loading-dots">
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                    </div>
+                `;
+                
+                messageDiv.appendChild(avatarDiv);
+                messageDiv.appendChild(contentDiv);
+                
+                chatContainer.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                window.scrollTo({
+                    top: document.body.scrollHeight,
+                    behavior: 'smooth'
+                });
+                
+                // Disable submit button
+                submitBtn.disabled = true;
+            }
+            
+            // Function to hide loading indicator
+            function hideLoading() {
+                const loadingDiv = document.getElementById('loading-indicator');
+                if (loadingDiv) {
+                    loadingDiv.remove();
+                }
+                
+                // Enable submit button
+                submitBtn.disabled = false;
+            }
+            
+            // Function to handle form submission
+            async function handleSubmit() {
+                const question = questionInput.value.trim();
+                if (!question) return;
+                
+                // Add user message to chat
+                addMessage(question, true);
+                
+                // Clear input
+                questionInput.value = '';
+                
+                // Show loading indicator
+                showLoading();
+                
+                try {
+                    // Send request to API
+                    const webSearchEnabled = document.getElementById('web-search-toggle').checked;
+                    const response = await fetch('/api/ask', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            question,
+                            web_search_enabled: webSearchEnabled
+                        })
+                    });
+                    
+                    // Hide loading indicator
+                    hideLoading();
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        addMessage(data);
+                        
+                        // Save chat to localStorage
+                        saveChatToLocalStorage();
+                    } else {
+                        const error = await response.json();
+                        addMessage({ 
+                            answer: `Error: ${error.error || 'Something went wrong'}`,
+                            sources: []
+                        });
+                        
+                        // Save chat to localStorage
+                        saveChatToLocalStorage();
+                    }
+                } catch (error) {
+                    // Hide loading indicator
+                    hideLoading();
+                    
+                    addMessage({ 
+                        answer: `Error: ${error.message || 'Something went wrong'}`,
+                        sources: []
+                    });
+                    
+                    // Save chat to localStorage
+                    saveChatToLocalStorage();
+                }
+            }
+            
+            // Event listeners
+            submitBtn.addEventListener('click', handleSubmit);
+            
+            questionInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleSubmit();
+                }
+            });
+            
+            newChatBtn.addEventListener('click', startNewChat);
+        });
+    </script>
+</body>
+</html>

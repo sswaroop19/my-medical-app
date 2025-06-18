@@ -1,0 +1,111 @@
+<!-- Settings Modal -->
+<div id="settings-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Settings</h2>
+            <button class="close-modal" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>Web Search</span>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="web-search-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </div>
+                </div>
+                <p class="setting-description">Include web search results in responses</p>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>Clear All Conversations</span>
+                </div>
+                <button class="danger-btn" onclick="clearAllConversations()">
+                    Clear conversations
+                </button>
+                <p class="setting-description">This will permanently delete all your conversation history</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: var(--chat-bg);
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    border: 1px solid var(--border-color);
+}
+
+.modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: var(--text-color);
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.setting-item {
+    margin-bottom: 24px;
+}
+
+.setting-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.setting-description {
+    color: #8e8ea0;
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+.danger-btn {
+    background-color: #dc2626;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+.danger-btn:hover {
+    background-color: #b91c1c;
+}
+</style>
